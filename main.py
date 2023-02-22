@@ -11,7 +11,15 @@ for S in Section:
 
     for line in lines:
         Line_Elements = line.split("\t")
+        ClassCode = Line_Elements[0]
+        if len(ClassCode) <= 4:
+            continue
+        link = f'https://patents.google.com/xhr/query?url=q%3D{ClassCode}%26oq%3D{ClassCode}&exp=&download=true'
+        entry = [link, ClassCode]
+        LinkDataframe.loc[len(LinkDataframe)] = entry
+        print(entry)
 
+LinkDataframe.to_csv('Desktop')
 
 
 
