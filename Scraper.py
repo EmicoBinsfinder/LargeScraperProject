@@ -1,10 +1,6 @@
 import numpy as np
 import pandas as pd
 import glob
-from selenium import webdriver
-from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.common.by import By
-from selenium.webdriver import FirefoxOptions
 import os
 import itertools
 import random
