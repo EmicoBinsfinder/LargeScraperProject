@@ -64,15 +64,17 @@ import os
 #             if keep_headers:
 #                 current_out_writer.writerow(headers)
 #         current_out_writer.writerow(row)
-#
-# split(open('E:/Downloads/PatentNames1.csv', 'r'), 'E:/Downloads/PatentNames1')
-# split(open('E:/Downloads/PatentNames2.csv', 'r'), 'E:/Downloads/PatentNames2')
-# split(open('E:/Downloads/PatentNames3.csv', 'r'), 'E:/Downloads/PatentNames3')
+# 
+# split(open('/home/amran/PHD/patent_startup/LargeScraperProject/Dataset/PatentNames1.csv', 'r'), '/home/amran/PHD/patent_startup/LargeScraperProject/Dataset/PatentNames1/')
+# split(open('/home/amran/PHD/patent_startup/LargeScraperProject/Dataset/PatentNames2.csv', 'r'), '/home/amran/PHD/patent_startup/LargeScraperProject/Dataset/PatentNames2/')
+# split(open('/home/amran/PHD/patent_startup/LargeScraperProject/Dataset/PatentNames3.csv', 'r'), '/home/amran/PHD/patent_startup/LargeScraperProject/Dataset/PatentNames3/')
 
-working_dir = 'E:/Downloads/PatentNames1/'
+working_dir = '/home/amran/PHD/patent_startup/LargeScraperProject/Dataset/PatentNames2/'
 files = os.listdir(working_dir)
 PatentNumberDF = pd.read_csv(f'{working_dir}{files[0]}')
 PatentNumberDF = np.array(PatentNumberDF['publication_number'])
+
+print(files[0])
 
 ############ Renaming all of the Search CSVs to their Keyword Search and removing first row ###################
 
@@ -96,7 +98,8 @@ def get_patent_metadata(LINK, PatentName):
 
 
         ###Getting the abstract from each page
-        abstract = Response_HTML.find("div", class_="abstract")
+        #abstract = Response_HTML.find("div", class_="abstract")
+        abstract = Response_HTML.find("div", class_="claim style-scope patent-text")
 
         if abstract == None:
             abstract = 'No Abstract'
@@ -151,10 +154,15 @@ def get_patent_metadata(LINK, PatentName):
         Status = PatentName
         return abstract, Application_number, Title, Classifications, Country_Code, Status
 
-
-for x in PatentNumberDF:
+st = time.time()
+for x in PatentNumberDF[0:5]:
     PatentName = x.replace('-', '')
     Link = f'https://patents.google.com/patent/{PatentName}/en'
     abstract, Application_number, Title, Classifications, Country_Code, Status = get_patent_metadata(Link, PatentName)
+    print(abstract)
+    print(Classifications)
     print(PatentName)
 
+end = time.time()
+
+print(end-st)
