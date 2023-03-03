@@ -37,49 +37,60 @@ from os import listdir
 #### Split Patent Names file into smaller files
 import os
 
+"""
+def split(filehandler, output_path, delimiter=',', row_limit=1000000,
+          output_name_template='output_%s.csv', keep_headers=True):
+    import csv
+    reader = csv.reader(filehandler, delimiter=delimiter)
+    current_piece = 1
+    current_out_path = os.path.join(
+        output_path,
+        output_name_template % current_piece
+    )
+    current_out_writer = csv.writer(open(current_out_path, 'w'), delimiter=delimiter)
+    current_limit = row_limit
+    if keep_headers:
+        headers = next(reader)
+        current_out_writer.writerow(headers)
+    for i, row in enumerate(reader):
+        if i + 1 > current_limit:
+            current_piece += 1
+            current_limit = row_limit * current_piece
+            current_out_path = os.path.join(
+                output_path,
+                output_name_template % current_piece
+            )
+            current_out_writer = csv.writer(open(current_out_path, 'w'), delimiter=delimiter)
+            if keep_headers:
+                current_out_writer.writerow(headers)
+        current_out_writer.writerow(row)
 
-# def split(filehandler, output_path, delimiter=',', row_limit=1000000,
-#           output_name_template='output_%s.csv', keep_headers=True):
-#     import csv
-#     reader = csv.reader(filehandler, delimiter=delimiter)
-#     current_piece = 1
-#     current_out_path = os.path.join(
-#         output_path,
-#         output_name_template % current_piece
-#     )
-#     current_out_writer = csv.writer(open(current_out_path, 'w'), delimiter=delimiter)
-#     current_limit = row_limit
-#     if keep_headers:
-#         headers = next(reader)
-#         current_out_writer.writerow(headers)
-#     for i, row in enumerate(reader):
-#         if i + 1 > current_limit:
-#             current_piece += 1
-#             current_limit = row_limit * current_piece
-#             current_out_path = os.path.join(
-#                 output_path,
-#                 output_name_template % current_piece
-#             )
-#             current_out_writer = csv.writer(open(current_out_path, 'w'), delimiter=delimiter)
-#             if keep_headers:
-#                 current_out_writer.writerow(headers)
-#         current_out_writer.writerow(row)
-# 
-# split(open('/home/amran/PHD/patent_startup/LargeScraperProject/Dataset/PatentNames1.csv', 'r'), '/home/amran/PHD/patent_startup/LargeScraperProject/Dataset/PatentNames1/')
-# split(open('/home/amran/PHD/patent_startup/LargeScraperProject/Dataset/PatentNames2.csv', 'r'), '/home/amran/PHD/patent_startup/LargeScraperProject/Dataset/PatentNames2/')
-# split(open('/home/amran/PHD/patent_startup/LargeScraperProject/Dataset/PatentNames3.csv', 'r'), '/home/amran/PHD/patent_startup/LargeScraperProject/Dataset/PatentNames3/')
+split(open('/home/amran/LargeScraperProject/Dataset/PatentNames1.csv', 'r'), '/home/amran/LargeScraperProject/Dataset/PatentNames1/')
+split(open('/home/amran/LargeScraperProject/Dataset/PatentNames2.csv', 'r'), '/home/amran/LargeScraperProject/Dataset/PatentNames2/')
+split(open('/home/amran/LargeScraperProject/Dataset/PatentNames3.csv', 'r'), '/home/amran/LargeScraperProject/Dataset/PatentNames3/')
+"""
 
-working_dir = '/home/amran/PHD/patent_startup/LargeScraperProject/Dataset/PatentNames2/'
+working_dir = '/home/amran/LargeScraperProject/Dataset/PatentNames2/'
 files = os.listdir(working_dir)
-PatentNumberDF = pd.read_csv(f'{working_dir}{files[0]}')
+PatentNumberDF = pd.read_csv(f'{working_dir}{files[2]}')
 PatentNumberDF = np.array(PatentNumberDF['publication_number'])
 
-print(files[0])
+print(files[2])
 
 ############ Renaming all of the Search CSVs to their Keyword Search and removing first row ###################
 
 ClassDataframe = pd.DataFrame(columns=["Abstract", "Application_number", "Title", "Classifications", "Country_Code", "Status"])
 def get_patent_metadata(LINK, PatentName):
+
+    ## Note to me (amran):
+    # abs -> just abstract
+    # claims -> div, class = claim-text
+    # claims -> claims (machine translated)
+    # desc -> div, class = desription-line
+    # desc -> desription (machine translated)
+    # desc -> div, class = desription-paragraph (idk why)
+    ## please just some consistency!!!!!! i beg
+
     ########################################### Getting the HTML of the entire page ###########################################
     Response = requests.get(LINK)
     Response_HTML = soup(Response.content, "html.parser")
@@ -98,8 +109,7 @@ def get_patent_metadata(LINK, PatentName):
 
 
         ###Getting the abstract from each page
-        #abstract = Response_HTML.find("div", class_="abstract")
-        abstract = Response_HTML.find("div", class_="claim style-scope patent-text")
+        abstract = Response_HTML.find("div", class_="abstract")
 
         if abstract == None:
             abstract = 'No Abstract'
@@ -136,33 +146,102 @@ def get_patent_metadata(LINK, PatentName):
 
         ###################### Getting the Claims ######################
 
+        claims = Response_HTML.find_all('div', {'class': 'claim-text'})
+
+        if len(claims) == 0:
+            claims2 = Response_HTML.find_all('claims')
+
+            if len(claims2) == 0:
+                print('No Claim', PatentName)
+                claims = 'NaN'
+            else:
+                claims = ' '.join([i.get_text() for i in claims2])
+                '''
+                ########### doesnt work that well... ##############
+                import nltk
+                #nltk.download('words')
+                words = set(nltk.corpus.words.words())
+                
+                claims3 = " ".join(w for w in nltk.wordpunct_tokenize(claims) \
+                        if w.lower() in words or not w.isalpha())
+                print(claims3)
+                ###################################################
+                '''
+        else:
+            claims = ' '.join([i.get_text() for i in claims])
+        
 
         ###################### Getting the Description ##########################
 
+        desc = Response_HTML.find_all('div', {'class': 'description-line'})
 
-        ###################### Getting the
+        if len(desc) == 0:
+            desc2 = Response_HTML.find_all('description')
 
-        return abstract, Application_number, Title, Classifications, Country_Code, Status
+            if len(desc2) == 0:
+                desc3 = Response_HTML.find_all('div', {'class': 'description-paragraph'})
+
+                if len(desc3) == 0:
+                    desc = 'NaN'
+                    print('No Description', PatentName)
+                    # tries all three potential css selectors
+                else:
+                    desc = ' '.join([i.get_text() for i in desc3])
+            else:
+                desc = ' '.join([i.get_text() for i in desc2])
+        else:
+            desc = ' '.join([i.get_text() for i in desc])
+
+
+        ###################### Getting the Similar Docu list ###################
+        
+        #simdocs = Response_HTML.find_all('a', {'id': 'link', 'class': 'style-scope state-modifier'})
+        #simdocs = Response_HTML.find_all('span', {'class': 'td'})
+        ## simdocs = Response_HTML.find_all('h3')#, href=True)#, {'class':'style-scope'})#, {'class': 'td style-scope patent-result'})
+        #simdocs = Response_HTML.find_all('state-modifier', {'class': 'style-scope'})#Response_HTML.find_all('state-modifier')
+        ## print(len(simdocs))
+
+        ## sims = [i.get_text().strip() for i in simdocs]
+        ## classv = [i.attrs for i in simdocs]
+        #if PatentName == 'US20190387517A1':
+        #    print(sims[100:])
+        #    print(classv[100:])
+    
+        return abstract, claims, desc, Application_number, Title, Classifications, Country_Code, Status
 
     except IndexError:
         print('Whack Page')
         abstract = PatentName
+        claims = PatentName
+        desc = PatentName
         Application_number = PatentName
         Title = PatentName
         Classifications = PatentName
         Country_Code = PatentName
         Status = PatentName
-        return abstract, Application_number, Title, Classifications, Country_Code, Status
+
+        return abstract, claims, desc, Application_number, Title, Classifications, Country_Code, Status
 
 st = time.time()
-for x in PatentNumberDF[0:5]:
+
+allv = []
+
+for x in PatentNumberDF[0:100]:
     PatentName = x.replace('-', '')
     Link = f'https://patents.google.com/patent/{PatentName}/en'
-    abstract, Application_number, Title, Classifications, Country_Code, Status = get_patent_metadata(Link, PatentName)
-    print(abstract)
-    print(Classifications)
-    print(PatentName)
+    abstract, claims, desc, Application_number, Title, Classifications, Country_Code, Status = get_patent_metadata(Link, PatentName)
+    if Title == PatentName:
+        if PatentName.startswith('US'):
+            PatentName = PatentName[:6] + '0' + PatentName[6:]
+            Link = f'https://patents.google.com/patent/{PatentName}/en'
+            abstract, claims, desc, Application_number, Title, Classifications, Country_Code, Status = get_patent_metadata(Link, PatentName)
+    
+    allv.append([abstract, claims, desc, Application_number, Title, Classifications, Country_Code, Status])
 
+df = pd.DataFrame(allv, columns = ['ab', 'c', 'd', 'ap', 't', 'clas', 'cc', 'st'])
+df.to_csv('just_test.csv', index=None)
+
+print(df['cc'])
 end = time.time()
 
 print(end-st)
