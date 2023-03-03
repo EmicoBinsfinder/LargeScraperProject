@@ -132,7 +132,7 @@ def get_patent_metadata(LINK, PatentName):
                     Classifications.append(Classifications_Text[Index])
                 Index += 1
         if Classifications == []:
-            print('No Classificatiion')
+            print('No Classificatiion ', PatentName)
         ############################################## Getting the Patent Country Code ###########################################
         Country_Code = Response_HTML.find(attrs={'itemprop':'countryCode'}).get_text()
 
@@ -153,7 +153,7 @@ def get_patent_metadata(LINK, PatentName):
 
             if len(claims2) == 0:
                 print('No Claim', PatentName)
-                claims = 'NaN'
+                claims = 'No Claim'
             else:
                 claims = ' '.join([i.get_text() for i in claims2])
                 '''
@@ -182,7 +182,7 @@ def get_patent_metadata(LINK, PatentName):
                 desc3 = Response_HTML.find_all('div', {'class': 'description-paragraph'})
 
                 if len(desc3) == 0:
-                    desc = 'NaN'
+                    desc = 'No Description'
                     print('No Description', PatentName)
                     # tries all three potential css selectors
                 else:
@@ -192,22 +192,27 @@ def get_patent_metadata(LINK, PatentName):
         else:
             desc = ' '.join([i.get_text() for i in desc])
 
-
+        
         ###################### Getting the Similar Docu list ###################
         
-        #simdocs = Response_HTML.find_all('a', {'id': 'link', 'class': 'style-scope state-modifier'})
-        #simdocs = Response_HTML.find_all('span', {'class': 'td'})
-        ## simdocs = Response_HTML.find_all('h3')#, href=True)#, {'class':'style-scope'})#, {'class': 'td style-scope patent-result'})
-        #simdocs = Response_HTML.find_all('state-modifier', {'class': 'style-scope'})#Response_HTML.find_all('state-modifier')
-        ## print(len(simdocs))
+        simdocs = Response_HTML.find_all('a', href=True)#, {'class':'style-scope'})#, {'class': 'td style-scope patent-result'})
 
-        ## sims = [i.get_text().strip() for i in simdocs]
-        ## classv = [i.attrs for i in simdocs]
-        #if PatentName == 'US20190387517A1':
-        #    print(sims[100:])
-        #    print(classv[100:])
+        par = [i.parent for i in simdocs]
+
+        simpatname = [(i.get_text()).strip().split('\n')[0] for i in par if i.find(attrs={'itemprop':"isPatent"}) != None]
+        ######### strips trailing '\n' and gets rid of (en) ###########
+        simdocs = [i for i in simpatname  if PatentName not in i]
+        if len(simdocs) == 0:
+            simdocs = 'No Similar Docs'
+        ###### to remove any sim docs that are just the same patent ###
     
-        return abstract, claims, desc, Application_number, Title, Classifications, Country_Code, Status
+        ###################### Getting the Espacent ###################
+
+        links = Response_HTML.find_all(lambda t: t.name == "a" and t.text.startswith("Espacenet"))
+        espace = [i['href'] for i in links][0]
+
+
+        return abstract, claims, desc, Application_number, Title, Classifications, Country_Code, Status, simdocs, espace
 
     except IndexError:
         print('Whack Page')
@@ -219,29 +224,31 @@ def get_patent_metadata(LINK, PatentName):
         Classifications = PatentName
         Country_Code = PatentName
         Status = PatentName
+        simdocs = PatentName
+        espace = PatentName
 
-        return abstract, claims, desc, Application_number, Title, Classifications, Country_Code, Status
+        return abstract, claims, desc, Application_number, Title, Classifications, Country_Code, Status, simdocs, espace
 
 st = time.time()
 
 allv = []
 
-for x in PatentNumberDF[0:100]:
+for x in PatentNumberDF[0:5]:
     PatentName = x.replace('-', '')
     Link = f'https://patents.google.com/patent/{PatentName}/en'
-    abstract, claims, desc, Application_number, Title, Classifications, Country_Code, Status = get_patent_metadata(Link, PatentName)
+    abstract, claims, desc, Application_number, Title, Classifications, Country_Code, Status, simdocs, espace = get_patent_metadata(Link, PatentName)
     if Title == PatentName:
         if PatentName.startswith('US'):
             PatentName = PatentName[:6] + '0' + PatentName[6:]
             Link = f'https://patents.google.com/patent/{PatentName}/en'
-            abstract, claims, desc, Application_number, Title, Classifications, Country_Code, Status = get_patent_metadata(Link, PatentName)
+            abstract, claims, desc, Application_number, Title, Classifications, Country_Code, Status, simdocs, espace = get_patent_metadata(Link, PatentName)
     
-    allv.append([abstract, claims, desc, Application_number, Title, Classifications, Country_Code, Status])
+    allv.append([abstract, claims, desc, Application_number, Title, Classifications, Country_Code, Status, simdocs, espace])
 
-df = pd.DataFrame(allv, columns = ['ab', 'c', 'd', 'ap', 't', 'clas', 'cc', 'st'])
+df = pd.DataFrame(allv, columns = ['ab', 'c', 'd', 'ap', 't', 'clas', 'cc', 'st', 'sim', 'es'])
 df.to_csv('just_test.csv', index=None)
 
-print(df['cc'])
+print(df['es'])
 end = time.time()
 
 print(end-st)
