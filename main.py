@@ -200,7 +200,7 @@ def get_patent_metadata(LINK, PatentName):
         par = [i.parent for i in simdocs]
 
         simpatname = [(i.get_text()).strip().split('\n')[0] for i in par if i.find(attrs={'itemprop':"isPatent"}) != None]
-        ######### strips trailing '\n' and gets rid of (en) ###########
+        #"""""" strips trailing '\n' and gets rid of (en) """"""#
         simdocs = [i for i in simpatname  if PatentName not in i]
         if len(simdocs) == 0:
             simdocs = 'No Similar Docs'
@@ -210,7 +210,20 @@ def get_patent_metadata(LINK, PatentName):
 
         links = Response_HTML.find_all(lambda t: t.name == "a" and t.text.startswith("Espacenet"))
         espace = [i['href'] for i in links][0]
+        if len(espace) == 0:
+            espace = 'No Espacent link'
 
+        ###############################################################
+
+        cited = list(set([i.find(attrs={'itemprop':'publicationNumber'}).get_text() for i in par if i.find(attrs={'itemprop':'publicationNumber'}) != None]))# = [i.parent for i in simdocs]
+        cited = [i for i in cited if PatentName not in i]
+        print(len(cited), PatentName)
+
+        if PatentName == 'US20130283719A1':
+            test1 = [i for i in par if i.find(attrs={'itemprop':'publicationNumber'}) != None]
+            test2 = [i for i in test1 if i.find(attrs={'itemprop':'isPatent'}) == None]
+            print(test2)
+            print(len(test1),len(test2))
 
         return abstract, claims, desc, Application_number, Title, Classifications, Country_Code, Status, simdocs, espace
 
