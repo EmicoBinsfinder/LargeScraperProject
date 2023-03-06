@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/LargeScraperProject.iml" filepath="$PROJECT_DIR$/.idea/LargeScraperProject.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../LargeScraperProject/.idea/LargeScraperProject.iml" filepath="$PROJECT_DIR$/../LargeScraperProject/.idea/LargeScraperProject.iml" />
     </modules>
   </component>
 </project>

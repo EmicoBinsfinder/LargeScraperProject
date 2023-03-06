@@ -71,7 +71,7 @@ import os
 
 working_dir = 'E:/Downloads/PatentNames1/'
 files = os.listdir(working_dir)
-PatentNumberDF = pd.read_csv(f'{working_dir}{files[0]}')
+PatentNumberDF = pd.read_csv(f'E:/Downloads/output_12.csv')
 PatentNumberDF = np.array(PatentNumberDF['publication_number'])
 
 ############ Renaming all of the Search CSVs to their Keyword Search and removing first row ###################
@@ -87,20 +87,19 @@ def get_patent_metadata(LINK, PatentName):
         title = Response_HTML.find("title")
         if title == None:
             Title = 'No Title'
-            print('No Title')
+            #print('No Title')
         else:
             title = title.get_text()
             title_elements = title.split(" - ")
             Application_number = title_elements[0]
             Title = title_elements[1].replace(" \n     ", "")
 
-
         ###Getting the abstract from each page
         abstract = Response_HTML.find("div", class_="abstract")
 
         if abstract == None:
             abstract = 'No Abstract'
-            print('No abstract')
+            #print('No abstract')
         else:
             abstract = abstract.get_text()
 
@@ -118,8 +117,8 @@ def get_patent_metadata(LINK, PatentName):
                 if int(len(Classifications_Text[int(Index)+1])) < int(len(Classifications_Text[Index])):
                     Classifications.append(Classifications_Text[Index])
                 Index += 1
-        if Classifications == []:
-            print('No Classificatiion')
+        #if Classifications == []:
+            #print('No Classificatiion')
         ############################################## Getting the Patent Country Code ###########################################
         Country_Code = Response_HTML.find(attrs={'itemprop':'countryCode'}).get_text()
 
@@ -127,7 +126,7 @@ def get_patent_metadata(LINK, PatentName):
         Status = Response_HTML.find(attrs={'itemprop':'status'})
         if Status == None:
             Status = 'Status Unknown'
-            print('Status Unknown')
+            #print('Status Unknown')
         else:
             Status = Status.get_text()
 
@@ -137,7 +136,7 @@ def get_patent_metadata(LINK, PatentName):
         ###################### Getting the Description ##########################
 
 
-        ###################### Getting the
+        ###################### Getting the Related Documents ############
 
         return abstract, Application_number, Title, Classifications, Country_Code, Status
 
@@ -156,5 +155,9 @@ for x in PatentNumberDF:
     PatentName = x.replace('-', '')
     Link = f'https://patents.google.com/patent/{PatentName}/en'
     abstract, Application_number, Title, Classifications, Country_Code, Status = get_patent_metadata(Link, PatentName)
-    print(PatentName)
-
+    print(Application_number)
+    print(Title)
+    print(Classifications)
+    print(Country_Code)
+    print(Status)
+    print(abstract)
