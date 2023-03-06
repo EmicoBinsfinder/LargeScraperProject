@@ -35,7 +35,6 @@ import os
 from os import listdir
 
 #### Split Patent Names file into smaller files
-import os
 
 """
 def split(filehandler, output_path, delimiter=',', row_limit=1000000,
@@ -70,16 +69,13 @@ split(open('/home/amran/LargeScraperProject/Dataset/PatentNames2.csv', 'r'), '/h
 split(open('/home/amran/LargeScraperProject/Dataset/PatentNames3.csv', 'r'), '/home/amran/LargeScraperProject/Dataset/PatentNames3/')
 """
 
-working_dir = '/home/amran/LargeScraperProject/Dataset/PatentNames2/'
-files = os.listdir(working_dir)
-PatentNumberDF = pd.read_csv(f'{working_dir}{files[2]}')
+# working_dir = 'Downloads/output_12.csv'
+# files = os.listdir(working_dir)
+PatentNumberDF = pd.read_csv('C:/Users/eeo21/Documents/Startup_Datasets/output_12.csv')
 PatentNumberDF = np.array(PatentNumberDF['publication_number'])
-
-print(files[2])
 
 ############ Renaming all of the Search CSVs to their Keyword Search and removing first row ###################
 
-ClassDataframe = pd.DataFrame(columns=["Abstract", "Application_number", "Title", "Classifications", "Country_Code", "Status"])
 def get_patent_metadata(LINK, PatentName):
 
     ## Note to me (amran):
@@ -92,8 +88,14 @@ def get_patent_metadata(LINK, PatentName):
     ## please just some consistency!!!!!! i beg
 
     ########################################### Getting the HTML of the entire page ###########################################
+
+    def accumulate(attributes_so_far, key, value):
+        if not isinstance(attributes_so_far[key], list):
+            attributes_so_far[key] = [attributes_so_far[key]]
+        attributes_so_far[key].append(value)
+
     Response = requests.get(LINK)
-    Response_HTML = soup(Response.content, "html.parser")
+    Response_HTML = soup(Response.content, "html.parser", on_duplicate_attribute=accumulate)
 
     try:
         ###########################################Getting the Patent Number/Checking if Page Exists ###########################################
@@ -104,9 +106,9 @@ def get_patent_metadata(LINK, PatentName):
         else:
             title = title.get_text()
             title_elements = title.split(" - ")
-            Application_number = title_elements[0]
+            Application_number = PatentName
             Title = title_elements[1].replace(" \n     ", "")
-
+            Title = Title.replace('\n', '')
 
         ###Getting the abstract from each page
         abstract = Response_HTML.find("div", class_="abstract")
@@ -150,12 +152,13 @@ def get_patent_metadata(LINK, PatentName):
 
         if len(claims) == 0:
             claims2 = Response_HTML.find_all('claims')
-
             if len(claims2) == 0:
                 print('No Claim', PatentName)
                 claims = 'No Claim'
             else:
                 claims = ' '.join([i.get_text() for i in claims2])
+                claims = claims.replace('\n', '')
+
                 '''
                 ########### doesnt work that well... ##############
                 import nltk
@@ -168,8 +171,16 @@ def get_patent_metadata(LINK, PatentName):
                 ###################################################
                 '''
         else:
-            claims = ' '.join([i.get_text() for i in claims])
-        
+            for x in claims:
+                claimsegment = [text for text in x.stripped_strings]
+                indexslice = int(len(claimsegment) / 2)
+                english = claimsegment[indexslice:]
+                claims = ' '.join([x for x in english])
+                print(claims)
+
+            claims = claims.replace('\n', '')
+            print(claims)
+
 
         ###################### Getting the Description ##########################
 
@@ -187,12 +198,16 @@ def get_patent_metadata(LINK, PatentName):
                     # tries all three potential css selectors
                 else:
                     desc = ' '.join([i.get_text() for i in desc3])
+                    desc = desc.replace('\n', ' NEWLINE ')
+
             else:
                 desc = ' '.join([i.get_text() for i in desc2])
+                desc = desc.replace('\n', ' NEWLINE ')
+
         else:
             desc = ' '.join([i.get_text() for i in desc])
+            desc = desc.replace('\n', ' NEWLINE ')
 
-        
         ###################### Getting the Similar Docu list ###################
         
         simdocs = Response_HTML.find_all('a', href=True)#, {'class':'style-scope'})#, {'class': 'td style-scope patent-result'})
@@ -206,7 +221,7 @@ def get_patent_metadata(LINK, PatentName):
             simdocs = 'No Similar Docs'
         ###### to remove any sim docs that are just the same patent ###
     
-        ###################### Getting the Espacent ###################
+        ###################### Getting the Espacenet Links ###################
 
         links = Response_HTML.find_all(lambda t: t.name == "a" and t.text.startswith("Espacenet"))
         espace = [i['href'] for i in links][0]
@@ -244,9 +259,9 @@ def get_patent_metadata(LINK, PatentName):
 
 st = time.time()
 
-allv = []
+allv = pd.DataFrame(columns=['abstract', 'claims', 'description', 'application number', 'title', 'classifitcation', 'country code', 'status', 'similar documents', 'espacenet link'])
 
-for x in PatentNumberDF[0:5]:
+for x in PatentNumberDF[4:5]:
     PatentName = x.replace('-', '')
     Link = f'https://patents.google.com/patent/{PatentName}/en'
     abstract, claims, desc, Application_number, Title, Classifications, Country_Code, Status, simdocs, espace = get_patent_metadata(Link, PatentName)
@@ -256,12 +271,12 @@ for x in PatentNumberDF[0:5]:
             Link = f'https://patents.google.com/patent/{PatentName}/en'
             abstract, claims, desc, Application_number, Title, Classifications, Country_Code, Status, simdocs, espace = get_patent_metadata(Link, PatentName)
     
-    allv.append([abstract, claims, desc, Application_number, Title, Classifications, Country_Code, Status, simdocs, espace])
+    allv.loc[len(allv)] = [abstract, claims, desc, Application_number, Title, Classifications, Country_Code, Status, simdocs, espace]
 
-df = pd.DataFrame(allv, columns = ['ab', 'c', 'd', 'ap', 't', 'clas', 'cc', 'st', 'sim', 'es'])
-df.to_csv('just_test.csv', index=None)
+df = pd.DataFrame(allv, columns = ['abstract', 'claims', 'description', 'application number', 'title', 'classifitcation', 'country code', 'status', 'similar documents', 'espacenet link'])
+df.to_csv('C:/Users/eeo21/Documents/Startup_Datasets/just_test.csv', index=None)
 
-print(df['es'])
+print(df['claims'])
 end = time.time()
 
 print(end-st)
