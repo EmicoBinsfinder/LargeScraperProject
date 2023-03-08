@@ -33,8 +33,12 @@ import requests
 import pandas as pd
 import os
 from os import listdir
+import urllib.request
+import csv
+
 
 #### Split Patent Names file into smaller files
+import os
 
 """
 def split(filehandler, output_path, delimiter=',', row_limit=1000000,
@@ -69,12 +73,16 @@ split(open('/home/amran/LargeScraperProject/Dataset/PatentNames2.csv', 'r'), '/h
 split(open('/home/amran/LargeScraperProject/Dataset/PatentNames3.csv', 'r'), '/home/amran/LargeScraperProject/Dataset/PatentNames3/')
 """
 
-# working_dir = 'Downloads/output_12.csv'
-# files = os.listdir(working_dir)
-PatentNumberDF = pd.read_csv('C:/Users/eeo21/Documents/Startup_Datasets/output_12.csv')
+working_dir = '/home/amran/LargeScraperProject/Dataset/PatentNames2/'
+files = os.listdir(working_dir)
+PatentNumberDF = pd.read_csv(f'{working_dir}{files[2]}')
 PatentNumberDF = np.array(PatentNumberDF['publication_number'])
 
+print(files[2])
+
 ############ Renaming all of the Search CSVs to their Keyword Search and removing first row ###################
+
+ClassDataframe = pd.DataFrame(columns=["Abstract", "Application_number", "Title", "Classifications", "Country_Code", "Status"])
 
 def get_patent_metadata(LINK, PatentName):
 
@@ -88,162 +96,148 @@ def get_patent_metadata(LINK, PatentName):
     ## please just some consistency!!!!!! i beg
 
     ########################################### Getting the HTML of the entire page ###########################################
-
-    def accumulate(attributes_so_far, key, value):
-        if not isinstance(attributes_so_far[key], list):
-            attributes_so_far[key] = [attributes_so_far[key]]
-        attributes_so_far[key].append(value)
-
     Response = requests.get(LINK)
-    Response_HTML = soup(Response.content, "html.parser", on_duplicate_attribute=accumulate)
+    Response_HTML = soup(Response.content, "html.parser")
 
     try:
-        ###########################################Getting the Patent Number/Checking if Page Exists ###########################################
-        title = Response_HTML.find("title")
-        if title == None:
-            Title = 'No Title'
-            print('No Title')
+        if len(Response_HTML.find_all('span', {'class':'notranslate'})) > 0:
+            print(PatentName, ' -> machine translated')
+            claims = 'MachineTrans'
+            desc = 'MachineTrans'
+            abstract = 'MachineTrans'
+            claims = 'MachineTrans'
+            desc = 'MachineTrans'
+            Application_number = 'MachineTrans'
+            Title = 'MachineTrans'
+            Classifications = 'MachineTrans'
+            Country_Code = 'MachineTrans'
+            Status = 'MachineTrans'
+            simdocs = 'MachineTrans'
+            espace = 'MachineTrans'
         else:
-            title = title.get_text()
-            title_elements = title.split(" - ")
-            Application_number = PatentName
-            Title = title_elements[1].replace(" \n     ", "")
-            Title = Title.replace('\n', '')
-
-        ###Getting the abstract from each page
-        abstract = Response_HTML.find("div", class_="abstract")
-
-        if abstract == None:
-            abstract = 'No Abstract'
-            print('No abstract')
-        else:
-            abstract = abstract.get_text()
-
-        ############################################## Getting the Classification(s) ###########################################
-        Unprocessed_Classifications = Response_HTML.find_all(attrs={'itemprop':'Code'})
-        Classifications_Text = []
-        Classifications = []
-
-        for x in Unprocessed_Classifications:
-            Unprocessed_Classification = x.get_text()
-            Classifications_Text.append(Unprocessed_Classification)
-            Classifications = [Classifications_Text[-1]]
-            Index = 0
-            while Index < len(Classifications_Text) - 1:
-                if int(len(Classifications_Text[int(Index)+1])) < int(len(Classifications_Text[Index])):
-                    Classifications.append(Classifications_Text[Index])
-                Index += 1
-        if Classifications == []:
-            print('No Classificatiion ', PatentName)
-        ############################################## Getting the Patent Country Code ###########################################
-        Country_Code = Response_HTML.find(attrs={'itemprop':'countryCode'}).get_text()
-
-        ################################## Getting Current Status of the Patent ###########################################
-        Status = Response_HTML.find(attrs={'itemprop':'status'})
-        if Status == None:
-            Status = 'Status Unknown'
-            print('Status Unknown')
-        else:
-            Status = Status.get_text()
-
-        ###################### Getting the Claims ######################
-
-        claims = Response_HTML.find_all('div', {'class': 'claim-text'})
-
-        if len(claims) == 0:
-            claims2 = Response_HTML.find_all('claims')
-            if len(claims2) == 0:
-                print('No Claim', PatentName)
-                claims = 'No Claim'
+            ###########################################Getting the Patent Number/Checking if Page Exists ###########################################
+            title = Response_HTML.find("title")
+            if title == None:
+                Title = 'No Title'
+                print('No Title')
             else:
-                claims = ' '.join([i.get_text() for i in claims2])
-                claims = claims.replace('\n', '')
-
-                '''
-                ########### doesnt work that well... ##############
-                import nltk
-                #nltk.download('words')
-                words = set(nltk.corpus.words.words())
-                
-                claims3 = " ".join(w for w in nltk.wordpunct_tokenize(claims) \
-                        if w.lower() in words or not w.isalpha())
-                print(claims3)
-                ###################################################
-                '''
-        else:
-            for x in claims:
-                claimsegment = [text for text in x.stripped_strings]
-                indexslice = int(len(claimsegment) / 2)
-                english = claimsegment[indexslice:]
-                claims = ' '.join([x for x in english])
-                print(claims)
-
-            claims = claims.replace('\n', '')
-            print(claims)
+                title = title.get_text()
+                title_elements = title.split(" - ")
+                Application_number = title_elements[0]
+                Title = title_elements[1].replace(" \n     ", "")
 
 
-        ###################### Getting the Description ##########################
+            ###Getting the abstract from each page
+            abstract = Response_HTML.find("div", class_="abstract")
 
-        desc = Response_HTML.find_all('div', {'class': 'description-line'})
-
-        if len(desc) == 0:
-            desc2 = Response_HTML.find_all('description')
-
-            if len(desc2) == 0:
-                desc3 = Response_HTML.find_all('div', {'class': 'description-paragraph'})
-
-                if len(desc3) == 0:
-                    desc = 'No Description'
-                    print('No Description', PatentName)
-                    # tries all three potential css selectors
-                else:
-                    desc = ' '.join([i.get_text() for i in desc3])
-                    desc = desc.replace('\n', ' NEWLINE ')
-
+            if abstract == None:
+                abstract = 'No Abstract'
+                print('No abstract')
             else:
-                desc = ' '.join([i.get_text() for i in desc2])
-                desc = desc.replace('\n', ' NEWLINE ')
+                abstract = abstract.get_text()
 
-        else:
-            desc = ' '.join([i.get_text() for i in desc])
-            desc = desc.replace('\n', ' NEWLINE ')
+            ############################################## Getting the Classification(s) ###########################################
+            Unprocessed_Classifications = Response_HTML.find_all(attrs={'itemprop':'Code'})
+            Classifications_Text = []
+            Classifications = []
 
-        ###################### Getting the Similar Docu list ###################
+            for x in Unprocessed_Classifications:
+                Unprocessed_Classification = x.get_text()
+                Classifications_Text.append(Unprocessed_Classification)
+                Classifications = [Classifications_Text[-1]]
+                Index = 0
+                while Index < len(Classifications_Text) - 1:
+                    if int(len(Classifications_Text[int(Index)+1])) < int(len(Classifications_Text[Index])):
+                        Classifications.append(Classifications_Text[Index])
+                    Index += 1
+            if Classifications == []:
+                print('No Classificatiion ', PatentName)
+            ############################################## Getting the Patent Country Code ###########################################
+            Country_Code = Response_HTML.find(attrs={'itemprop':'countryCode'}).get_text()
+
+            ################################## Getting Current Status of the Patent ###########################################
+            Status = Response_HTML.find(attrs={'itemprop':'status'})
+            if Status == None:
+                Status = 'Status Unknown'
+                print('Status Unknown')
+            else:
+                Status = Status.get_text()
+
+            ####################### Checking if Machine Gen - getting claims and description ######################
         
-        simdocs = Response_HTML.find_all('a', href=True)#, {'class':'style-scope'})#, {'class': 'td style-scope patent-result'})
+            claims = Response_HTML.find_all('div', {'class': 'claim-text'})
 
-        par = [i.parent for i in simdocs]
+            if len(claims) == 0:
+                claims2 = Response_HTML.find_all('claims')
+                
+                if len(claims2) == 0:
+                    print('No Claim', PatentName)
+                    claims = 'No Claim'
+                else:
 
-        simpatname = [(i.get_text()).strip().split('\n')[0] for i in par if i.find(attrs={'itemprop':"isPatent"}) != None]
-        #"""""" strips trailing '\n' and gets rid of (en) """"""#
-        simdocs = [i for i in simpatname  if PatentName not in i]
-        if len(simdocs) == 0:
-            simdocs = 'No Similar Docs'
-        ###### to remove any sim docs that are just the same patent ###
+                    claims = ' '.join([i.get_text() for i in claims2])
+            else:
+                claims = ' '.join([i.get_text() for i in claims])
+        
+            desc = Response_HTML.find_all('div', {'class': 'description-line'})
+
+            if len(desc) == 0:
+                desc2 = Response_HTML.find_all('description')
+
+                if len(desc2) == 0:
+                    desc3 = Response_HTML.find_all('div', {'class': 'description-paragraph'})
+
+                    if len(desc3) == 0:
+                        desc = 'No Description'
+                        print('No Description', PatentName)
+                        # tries all three potential css selectors
+                    else:
+                        desc = ' '.join([i.get_text() for i in desc3])
+                else:
+                    desc = ' '.join([i.get_text() for i in desc2])
+            else:
+                desc = ' '.join([i.get_text() for i in desc])
+
+        
+            ###################### Getting the Similar Docu list ###################
+            
+            simdocs = Response_HTML.find_all('a', href=True)
+
+            par = [i.parent for i in simdocs]
+
+            simpatname = [(i.get_text()).strip().split('\n')[0] for i in par if i.find(attrs={'itemprop':"isPatent"}) != None]
+            #"""""" strips trailing '\n' and gets rid of (en) """"""#
+            simdocs = [i for i in simpatname  if PatentName not in i]
+            if len(simdocs) == 0:
+                simdocs = 'No Similar Docs'
+            ###### to remove any sim docs that are just the same patent ###
     
-        ###################### Getting the Espacenet Links ###################
+            ###################### Getting the Espacent ###################
 
-        links = Response_HTML.find_all(lambda t: t.name == "a" and t.text.startswith("Espacenet"))
-        espace = [i['href'] for i in links][0]
-        if len(espace) == 0:
-            espace = 'No Espacent link'
+            links = Response_HTML.find_all(lambda t: t.name == "a" and t.text.startswith("Espacenet"))
+            espace = [i['href'] for i in links][0]
+            if len(espace) == 0:
+                espace = 'No Espacent link'
 
-        ###############################################################
+            ###############################################################
 
-        cited = list(set([i.find(attrs={'itemprop':'publicationNumber'}).get_text() for i in par if i.find(attrs={'itemprop':'publicationNumber'}) != None]))# = [i.parent for i in simdocs]
-        cited = [i for i in cited if PatentName not in i]
-        print(len(cited), PatentName)
+            '''
+            cited = list(set([i.find(attrs={'itemprop':'publicationNumber'}).get_text() for i in par if i.find(attrs={'itemprop':'publicationNumber'}) != None]))# = [i.parent for i in simdocs]
+            cited = [i for i in cited if PatentName not in i]
+            #print(len(cited), PatentName)
 
-        if PatentName == 'US20130283719A1':
-            test1 = [i for i in par if i.find(attrs={'itemprop':'publicationNumber'}) != None]
-            test2 = [i for i in test1 if i.find(attrs={'itemprop':'isPatent'}) == None]
-            print(test2)
-            print(len(test1),len(test2))
+            if PatentName == 'US20130283719A1':
+                test1 = [i for i in par if i.find(attrs={'itemprop':'publicationNumber'}) != None]
+                test2 = [i for i in test1 if i.find(attrs={'itemprop':'isPatent'}) == None]
+                #print(test2)
+                #print(len(test1),len(test2))
+            '''
 
         return abstract, claims, desc, Application_number, Title, Classifications, Country_Code, Status, simdocs, espace
 
     except IndexError:
         print('Whack Page')
+        notrans = 0
         abstract = PatentName
         claims = PatentName
         desc = PatentName
@@ -259,9 +253,19 @@ def get_patent_metadata(LINK, PatentName):
 
 st = time.time()
 
-allv = pd.DataFrame(columns=['abstract', 'claims', 'description', 'application number', 'title', 'classifitcation', 'country code', 'status', 'similar documents', 'espacenet link'])
+allv = []
 
-for x in PatentNumberDF[4:5]:
+savefile = 'scapped_google_patent.csv'
+
+head = ['ab', 'c', 'd', 'ap', 't', 'clas', 'cc', 'st', 'sim', 'es']
+
+f = open(savefile, 'a')
+writer = csv.writer(f)
+writer.writerow(head)
+f.close()
+
+cnt = 0
+for x in PatentNumberDF:#[0:5]:
     PatentName = x.replace('-', '')
     Link = f'https://patents.google.com/patent/{PatentName}/en'
     abstract, claims, desc, Application_number, Title, Classifications, Country_Code, Status, simdocs, espace = get_patent_metadata(Link, PatentName)
@@ -270,13 +274,23 @@ for x in PatentNumberDF[4:5]:
             PatentName = PatentName[:6] + '0' + PatentName[6:]
             Link = f'https://patents.google.com/patent/{PatentName}/en'
             abstract, claims, desc, Application_number, Title, Classifications, Country_Code, Status, simdocs, espace = get_patent_metadata(Link, PatentName)
-    
-    allv.loc[len(allv)] = [abstract, claims, desc, Application_number, Title, Classifications, Country_Code, Status, simdocs, espace]
+    allv.append([abstract, claims, desc, Application_number, Title, Classifications, Country_Code, Status, simdocs, espace])
+    f = open(savefile, 'a')
+    writer = csv.writer(f)
+    # Write section to file as scraping
+    writer.writerow(allv)
+    f.close()
+    cnt = cnt + 1
+    print(cnt)
 
-df = pd.DataFrame(allv, columns = ['abstract', 'claims', 'description', 'application number', 'title', 'classifitcation', 'country code', 'status', 'similar documents', 'espacenet link'])
-df.to_csv('C:/Users/eeo21/Documents/Startup_Datasets/just_test.csv', index=None)
 
-print(df['claims'])
+#df = pd.DataFrame(allv, columns = ['ab', 'c', 'd', 'ap', 't', 'clas', 'cc', 'st', 'sim', 'es'])
+#df.to_csv('test.csv', index=None)
+
 end = time.time()
 
 print(end-st)
+
+
+#df2 = df[df['c'] == 'MachineTrans']
+#print(len(df2))
