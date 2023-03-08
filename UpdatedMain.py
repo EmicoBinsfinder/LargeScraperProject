@@ -71,7 +71,7 @@ split(open('/home/amran/LargeScraperProject/Dataset/PatentNames3.csv', 'r'), '/h
 
 # working_dir = 'Downloads/output_12.csv'
 # files = os.listdir(working_dir)
-PatentNumberDF = pd.read_csv('C:/Users/eeo21/Documents/Startup_Datasets/output_12.csv')
+PatentNumberDF = pd.read_csv('E:/Downloads/output_12.csv')
 PatentNumberDF = np.array(PatentNumberDF['publication_number'])
 
 ############ Renaming all of the Search CSVs to their Keyword Search and removing first row ###################
@@ -149,37 +149,35 @@ def get_patent_metadata(LINK, PatentName):
         ###################### Getting the Claims ######################
 
         claims = Response_HTML.find_all('div', {'class': 'claim-text'})
-
+        print(type(claims))
         if len(claims) == 0:
             claims2 = Response_HTML.find_all('claims')
+            print(len(claims2))
             if len(claims2) == 0:
                 print('No Claim', PatentName)
                 claims = 'No Claim'
             else:
-                claims = ' '.join([i.get_text() for i in claims2])
-                claims = claims.replace('\n', '')
+                claims = ' '.join([i.get_text() for i in claims])
 
-                '''
-                ########### doesnt work that well... ##############
-                import nltk
-                #nltk.download('words')
-                words = set(nltk.corpus.words.words())
-                
-                claims3 = " ".join(w for w in nltk.wordpunct_tokenize(claims) \
-                        if w.lower() in words or not w.isalpha())
-                print(claims3)
-                ###################################################
-                '''
+                for x in claims:
+                    claimsegment = [text for text in x.stripped_strings]
+                    indexslice = int(len(claimsegment) / 2)
+                    english = claimsegment[indexslice:]
+                    claims = ' '.join([x for x in english])
+                    print(claims)
+
         else:
             for x in claims:
+                print(x)
                 claimsegment = [text for text in x.stripped_strings]
                 indexslice = int(len(claimsegment) / 2)
                 english = claimsegment[indexslice:]
-                claims = ' '.join([x for x in english])
-                print(claims)
+                claims.append(english)
 
-            claims = claims.replace('\n', '')
+            claims = ' '.join(claimsparts)
             print(claims)
+
+
 
 
         ###################### Getting the Description ##########################
@@ -274,7 +272,7 @@ for x in PatentNumberDF[4:5]:
     allv.loc[len(allv)] = [abstract, claims, desc, Application_number, Title, Classifications, Country_Code, Status, simdocs, espace]
 
 df = pd.DataFrame(allv, columns = ['abstract', 'claims', 'description', 'application number', 'title', 'classifitcation', 'country code', 'status', 'similar documents', 'espacenet link'])
-df.to_csv('C:/Users/eeo21/Documents/Startup_Datasets/just_test.csv', index=None)
+df.to_csv('E:/Downloads/test.csv', index=None)
 
 print(df['claims'])
 end = time.time()
