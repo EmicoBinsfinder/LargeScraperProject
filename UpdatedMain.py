@@ -73,12 +73,11 @@ split(open('/home/amran/LargeScraperProject/Dataset/PatentNames2.csv', 'r'), '/h
 split(open('/home/amran/LargeScraperProject/Dataset/PatentNames3.csv', 'r'), '/home/amran/LargeScraperProject/Dataset/PatentNames3/')
 """
 
-working_dir = '/home/amran/LargeScraperProject/Dataset/PatentNames2/'
-files = os.listdir(working_dir)
-PatentNumberDF = pd.read_csv(f'{working_dir}{files[2]}')
+# working_dir = '/home/amran/LargeScraperProject/Dataset/PatentNames2/'
+# files = os.listdir(working_dir)
+PatentNumberDF = pd.read_csv(f'E:/Downloads/output_12.csv')
 PatentNumberDF = np.array(PatentNumberDF['publication_number'])
 
-print(files[2])
 
 ############ Renaming all of the Search CSVs to their Keyword Search and removing first row ###################
 
@@ -255,7 +254,7 @@ st = time.time()
 
 allv = []
 
-savefile = 'scapped_google_patent.csv'
+savefile = 'E:/Downloads/scraped_google_patent.csv'
 
 head = ['ab', 'c', 'd', 'ap', 't', 'clas', 'cc', 'st', 'sim', 'es']
 
@@ -265,7 +264,8 @@ writer.writerow(head)
 f.close()
 
 cnt = 0
-for x in PatentNumberDF:#[0:5]:
+f = open(savefile, 'a', encoding='utf-8')
+for x in PatentNumberDF:
     PatentName = x.replace('-', '')
     Link = f'https://patents.google.com/patent/{PatentName}/en'
     abstract, claims, desc, Application_number, Title, Classifications, Country_Code, Status, simdocs, espace = get_patent_metadata(Link, PatentName)
@@ -274,14 +274,13 @@ for x in PatentNumberDF:#[0:5]:
             PatentName = PatentName[:6] + '0' + PatentName[6:]
             Link = f'https://patents.google.com/patent/{PatentName}/en'
             abstract, claims, desc, Application_number, Title, Classifications, Country_Code, Status, simdocs, espace = get_patent_metadata(Link, PatentName)
-    allv.append([abstract, claims, desc, Application_number, Title, Classifications, Country_Code, Status, simdocs, espace])
-    f = open(savefile, 'a')
+    results = abstract, claims, desc, Application_number, Title, Classifications, Country_Code, Status, simdocs, espace
     writer = csv.writer(f)
     # Write section to file as scraping
-    writer.writerow(allv)
-    f.close()
+    writer.writerow(results)
     cnt = cnt + 1
     print(cnt)
+f.close()
 
 
 #df = pd.DataFrame(allv, columns = ['ab', 'c', 'd', 'ap', 't', 'clas', 'cc', 'st', 'sim', 'es'])
