@@ -6,7 +6,6 @@
   <component name="ChangeListManager">
     <list default="true" id="7a8366df-90d7-4859-b629-b4202ea88cb0" name="Changes" comment="Updates">
       <change beforePath="$PROJECT_DIR$/../LargeScraperProject/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../LargeScraperProject/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../LargeScraperProject/UpdatedMain.py" beforeDir="false" afterPath="$PROJECT_DIR$/../LargeScraperProject/UpdatedMain.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -43,7 +42,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1678264137856</updated>
-      <workItem from="1678264139242" duration="7244000" />
+      <workItem from="1678264139242" duration="7938000" />
     </task>
     <task id="LOCAL-00001" summary="Updates">
       <created>1678276219421</created>
@@ -52,7 +51,14 @@
       <option name="project" value="LOCAL" />
       <updated>1678276219421</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL-00002" summary="Updates">
+      <created>1678294139883</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1678294139883</updated>
+    </task>
+    <option name="localTasksCounter" value="3" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -74,6 +80,6 @@
     <option name="LAST_COMMIT_MESSAGE" value="Updates" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
-    <SUITE FILE_PATH="coverage/LargeScraperProject_$UpdatedMain.coverage" NAME="UpdatedMain Coverage Results" MODIFIED="1678290756225" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/../LargeScraperProject" />
+    <SUITE FILE_PATH="coverage/LargeScraperProject_$UpdatedMain.coverage" NAME="UpdatedMain Coverage Results" MODIFIED="1678294340941" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/../LargeScraperProject" />
   </component>
 </project>

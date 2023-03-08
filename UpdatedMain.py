@@ -175,8 +175,11 @@ def get_patent_metadata(LINK, PatentName):
                 else:
 
                     claims = ' '.join([i.get_text() for i in claims2])
+                    claims = claims.replace('\n', '')
             else:
                 claims = ' '.join([i.get_text() for i in claims])
+                claims = claims.replace('\n', '')
+
         
             desc = Response_HTML.find_all('div', {'class': 'description-line'})
 
@@ -192,10 +195,13 @@ def get_patent_metadata(LINK, PatentName):
                         # tries all three potential css selectors
                     else:
                         desc = ' '.join([i.get_text() for i in desc3])
+                        desc = desc.replace('\n', ' NEWLINE ')
                 else:
                     desc = ' '.join([i.get_text() for i in desc2])
+                    desc = desc.replace('\n', ' NEWLINE ')
             else:
                 desc = ' '.join([i.get_text() for i in desc])
+                desc = desc.replace('\n', ' NEWLINE ')
 
         
             ###################### Getting the Similar Docu list ###################
