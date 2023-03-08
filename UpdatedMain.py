@@ -106,7 +106,7 @@ def get_patent_metadata(LINK, PatentName):
             abstract = 'MachineTrans'
             claims = 'MachineTrans'
             desc = 'MachineTrans'
-            Application_number = 'MachineTrans'
+            Application_number = PatentName
             Title = 'MachineTrans'
             Classifications = 'MachineTrans'
             Country_Code = 'MachineTrans'
