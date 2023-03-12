@@ -73,11 +73,8 @@ split(open('/home/amran/LargeScraperProject/Dataset/PatentNames2.csv', 'r'), '/h
 split(open('/home/amran/LargeScraperProject/Dataset/PatentNames3.csv', 'r'), '/home/amran/LargeScraperProject/Dataset/PatentNames3/')
 """
 
-# working_dir = '/home/amran/LargeScraperProject/Dataset/PatentNames2/'
-# files = os.listdir(working_dir)
-PatentNumberDF = pd.read_csv(f'E:/Downloads/output_12.csv')
+PatentNumberDF = pd.read_csv(f'E:/Downloads/PatentNames1/Scrape/output_2.csv')
 PatentNumberDF = np.array(PatentNumberDF['publication_number'])
-
 
 ############ Renaming all of the Search CSVs to their Keyword Search and removing first row ###################
 
@@ -100,9 +97,6 @@ def get_patent_metadata(LINK, PatentName):
 
     try:
         if len(Response_HTML.find_all('span', {'class':'notranslate'})) > 0:
-            print(PatentName, ' -> machine translated')
-            claims = 'MachineTrans'
-            desc = 'MachineTrans'
             abstract = 'MachineTrans'
             claims = 'MachineTrans'
             desc = 'MachineTrans'
@@ -118,7 +112,6 @@ def get_patent_metadata(LINK, PatentName):
             title = Response_HTML.find("title")
             if title == None:
                 Title = 'No Title'
-                print('No Title')
             else:
                 title = title.get_text()
                 title_elements = title.split(" - ")
@@ -131,7 +124,6 @@ def get_patent_metadata(LINK, PatentName):
 
             if abstract == None:
                 abstract = 'No Abstract'
-                print('No abstract')
             else:
                 abstract = abstract.get_text()
 
@@ -150,7 +142,7 @@ def get_patent_metadata(LINK, PatentName):
                         Classifications.append(Classifications_Text[Index])
                     Index += 1
             if Classifications == []:
-                print('No Classificatiion ', PatentName)
+                Classifications = 'No Classification'
             ############################################## Getting the Patent Country Code ###########################################
             Country_Code = Response_HTML.find(attrs={'itemprop':'countryCode'}).get_text()
 
@@ -158,7 +150,6 @@ def get_patent_metadata(LINK, PatentName):
             Status = Response_HTML.find(attrs={'itemprop':'status'})
             if Status == None:
                 Status = 'Status Unknown'
-                print('Status Unknown')
             else:
                 Status = Status.get_text()
 
@@ -170,7 +161,6 @@ def get_patent_metadata(LINK, PatentName):
                 claims2 = Response_HTML.find_all('claims')
                 
                 if len(claims2) == 0:
-                    print('No Claim', PatentName)
                     claims = 'No Claim'
                 else:
 
@@ -191,7 +181,6 @@ def get_patent_metadata(LINK, PatentName):
 
                     if len(desc3) == 0:
                         desc = 'No Description'
-                        print('No Description', PatentName)
                         # tries all three potential css selectors
                     else:
                         desc = ' '.join([i.get_text() for i in desc3])
@@ -241,13 +230,12 @@ def get_patent_metadata(LINK, PatentName):
         return abstract, claims, desc, Application_number, Title, Classifications, Country_Code, Status, simdocs, espace
 
     except IndexError:
-        print('Whack Page')
         notrans = 0
         abstract = PatentName
         claims = PatentName
         desc = PatentName
         Application_number = PatentName
-        Title = PatentName
+        Title = 'Index Error'
         Classifications = PatentName
         Country_Code = PatentName
         Status = PatentName
@@ -260,7 +248,7 @@ st = time.time()
 
 allv = []
 
-savefile = 'E:/Downloads/scraped_google_patent.csv'
+savefile = 'E:/Downloads/PatentNames1/Scrape/output_1_scrape.csv'
 
 head = ['ab', 'c', 'd', 'ap', 't', 'clas', 'cc', 'st', 'sim', 'es']
 
@@ -288,14 +276,6 @@ for x in PatentNumberDF:
     print(cnt)
 f.close()
 
-
-#df = pd.DataFrame(allv, columns = ['ab', 'c', 'd', 'ap', 't', 'clas', 'cc', 'st', 'sim', 'es'])
-#df.to_csv('test.csv', index=None)
-
 end = time.time()
-
 print(end-st)
 
-
-#df2 = df[df['c'] == 'MachineTrans']
-#print(len(df2))
